@@ -1,5 +1,3 @@
-#"content": "You are a helpful mental health chatbot for Korean teenagers. Keep your responses short, concise, and supportive like a text message. Focus on being understanding and empathetic, without being overly formal or complex. I will provide our current conversation history below for context. If there is none, then this is a new conversation."
-
 import os
 from openai import OpenAI
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -8,7 +6,6 @@ from dotenv import load_dotenv
 
 # Load API key from .env file
 load_dotenv()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -17,7 +14,7 @@ CORS(app)  # Allow frontend requests
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-# Store conversations in memory
+# Storing conversations in memory right now. We should consider using a database
 conversation_history = {}
 
 def get_chatgpt_response(conversation_id, user_message):
@@ -25,7 +22,7 @@ def get_chatgpt_response(conversation_id, user_message):
     if conversation_id not in conversation_history:
         conversation_history[conversation_id] = [{
             "role": "system",
-            "content": "You are a helpful assistant. Keep responses concise and friendly."
+            "content": "You are a helpful mental health chatbot for Korean teenagers. Keep your responses short, concise, and supportive like a text message. Focus on being understanding and empathetic, without being overly formal or complex."
         }]
     
     # Add user message to history
@@ -63,7 +60,7 @@ def chat_handler():
     data = request.get_json()
     user_message = data.get('message', '')
     
-    # Use IP as conversation ID (replace with user session ID in production)
+    # Using IP as conversation ID, consider creating user session IDs
     conversation_id = request.remote_addr
     
     if not user_message:
