@@ -110,28 +110,36 @@
     }
   </style>
 
-  <!-- Update your script section -->
   <script>
-    document.getElementById('chat-form').addEventListener('submit', async function(e) {
+    document.addEventListener("DOMContentLoaded", async function () {
+      try {
+        const response = await fetch('/greeting');
+        const data = await response.json();
+        addMessage(data.greeting, 'bot');
+      } catch (error) {
+        console.error("Error fetching greeting:", error);
+        addMessage("Hi! How are you feeling today?", 'bot'); // Fallback message
+      }
+    });
+  
+    document.getElementById('chat-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       const input = document.getElementById('user-input');
       const message = input.value.trim();
-      
+  
       if (!message) return;
-
+  
       // Add user message to chat
       addMessage(message, 'user');
       input.value = '';
-
+  
       try {
         const response = await fetch('/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: message })
         });
-
+  
         const data = await response.json();
         addMessage(data.response, 'bot');
       } catch (error) {
@@ -139,7 +147,7 @@
         addMessage('Sorry, there was an error processing your message.', 'bot');
       }
     });
-
+  
     function addMessage(text, sender) {
       const messageArea = document.getElementById('message-area');
       const messageDiv = document.createElement('div');

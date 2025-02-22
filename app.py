@@ -17,43 +17,61 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 # Storing conversations in memory right now. We should consider using a database
 conversation_history = {}
 
-def get_chatgpt_response(conversation_id, user_message):
-    # Initialize or update conversation history
+def get_chatgpt_response(conversation_id, user_message=None):
     if conversation_id not in conversation_history:
         conversation_history[conversation_id] = [{
             "role": "system",
             "content": "You are a helpful mental health chatbot for Korean teenagers. Keep your responses short, concise, and supportive like a text message. Focus on being understanding and empathetic, without being overly formal or complex."
         }]
-    
-    # Add user message to history
-    conversation_history[conversation_id].append({
-        "role": "user",
-        "content": user_message
-    })
-    
-    try:
-        # Get response from OpenAI
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=conversation_history[conversation_id],
-            temperature=0.7,
-            max_tokens=150
-        )
+        # Generate initial greeting
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=conversation_history[conversation_id],
+                temperature=0.7,
+                max_tokens=150
+            )
+            initial_message = response.choices[0].message.content
+            conversation_history[conversation_id].append({
+                "role": "assistant",
+                "content": initial_message
+            })
+        except Exception as e:
+            print(f"Error generating initial message: {e}")
+            initial_message = "Hi! How are you feeling today?"
         
-        # Extract bot response
-        bot_response = response.choices[0].message.content
-        
-        # Add bot response to history
+        return initial_message
+    
+    if user_message:
         conversation_history[conversation_id].append({
-            "role": "assistant",
-            "content": bot_response
+            "role": "user",
+            "content": user_message
         })
-        
-        return bot_response
-    
-    except Exception as e:
-        print(f"Error in OpenAI API call: {e}")
-        return "Sorry, I'm having trouble understanding. Please try again."
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=conversation_history[conversation_id],
+                temperature=0.7,
+                max_tokens=150
+            )
+            bot_response = response.choices[0].message.content
+            conversation_history[conversation_id].append({
+                "role": "assistant",
+                "content": bot_response
+            })
+            return bot_response
+        except Exception as e:
+            print(f"Error in OpenAI API call: {e}")
+            return "Sorry, I'm having trouble understanding. Please try again."
+
+    return "Hi! How are you feeling today?"
+
+@app.route('/greeting', methods=['GET'])
+def get_greeting():
+    conversation_id = request.remote_addr  # Identify user by IP
+    greeting = get_chatgpt_response(conversation_id)
+    return jsonify({'greeting': greeting})
 
 @app.route('/chat', methods=['POST'])
 def chat_handler():
