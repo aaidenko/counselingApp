@@ -4,9 +4,6 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# Load API key from .env file
-load_dotenv()
-
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Allow frontend requests
